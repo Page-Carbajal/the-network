@@ -1,4 +1,5 @@
 import React from "react";
+import UserList from "./components/UserList";
 
 function App() {
   return (
@@ -9,9 +10,7 @@ function App() {
         </div>
       </header>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center">
-          <p className="text-gray-600">Welcome to The Network</p>
-        </div>
+        <UserList />
       </main>
     </div>
   );
