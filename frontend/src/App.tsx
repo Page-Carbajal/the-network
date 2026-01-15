@@ -1,8 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import UserList from "./components/UserList";
 import PostFeed from "./components/PostFeed";
+import CreatePostForm from "./components/CreatePostForm";
+import type { PostWithAuthor } from "../src/types/index.ts";
 
 function App() {
+  const [selectedUserId] = useState(1); // For demo purposes, using user ID 1
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handlePostCreated = (post: PostWithAuthor) => {
+    setRefreshTrigger((prev) => prev + 1);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow">
@@ -12,8 +21,9 @@ function App() {
       </header>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <PostFeed />
+          <div className="lg:col-span-2 space-y-6">
+            <CreatePostForm userId={selectedUserId} onPostCreated={handlePostCreated} />
+            <PostFeed refreshTrigger={refreshTrigger} onPostCreated={handlePostCreated} />
           </div>
           <div className="lg:col-span-1">
             <UserList />
