@@ -2,7 +2,8 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { getAllUsers } from "../data/queries/users.ts";
 import { getAllPosts, getPostById, createPost } from "../data/queries/posts.ts";
-import { createPostSchema } from "../schemas/index.ts";
+import { getCommentsByPostId, createComment } from "../data/queries/comments.ts";
+import { createPostSchema, createCommentSchema } from "../schemas/index.ts";
 
 const app = new Hono();
 
@@ -18,7 +19,7 @@ app.get("/users", (c) => {
     return c.json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
-    return c.json({ error: "Failed to fetch users" }, 500);
+    return c.json({ error: "Failed to fetch users!" }, 500);
   }
 });
 
@@ -63,6 +64,42 @@ app.post("/posts", zValidator("json", createPostSchema), (c) => {
   } catch (error) {
     console.error("Error creating post:", error);
     return c.json({ error: "Failed to create post" }, 500);
+  }
+});
+
+// Comments endpoints
+app.get("/posts/:postId/comments", (c) => {
+  try {
+    const postId = parseInt(c.req.param("postId"));
+    if (isNaN(postId)) {
+      return c.json({ error: "Invalid post ID" }, 400);
+    }
+
+    const comments = getCommentsByPostId(postId);
+    return c.json(comments);
+  } catch (error) {
+    console.error("Error fetching comments:", error);
+    return c.json({ error: "Failed to fetch comments" }, 500);
+  }
+});
+
+app.post("/posts/:postId/comments", zValidator("json", createCommentSchema), (c) => {
+  try {
+    const postId = parseInt(c.req.param("postId"));
+    if (isNaN(postId)) {
+      return c.json({ error: "Invalid post ID" }, 400);
+    }
+
+    const data = c.req.valid("json");
+    const comment = createComment({
+      postId,
+      userId: data.userId,
+      content: data.content,
+    });
+    return c.json(comment, 201);
+  } catch (error) {
+    console.error("Error creating comment:", error);
+    return c.json({ error: "Failed to create comment" }, 500);
   }
 });
 
