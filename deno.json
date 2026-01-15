@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "lib": ["deno.window"],
+    "jsx": "react-jsx"
+  },
+  "imports": {
+    "hono": "npm:hono@^4.0.0",
+    "@faker-js/faker": "npm:@faker-js/faker@^9.0.0",
+    "zod": "npm:zod@^3.22.0",
+    "sqlite": "jsr:@db/sqlite@^0.12.0"
+  },
+  "tasks": {
+    "dev": "deno run --allow-net --allow-read --allow-write --allow-env src/server/index.ts",
+    "migrate": "deno run --allow-read --allow-write --allow-env src/data/migrations/migrate.ts"
+  }
+}

@@ -45,3 +45,11 @@ Desktop.ini
 .cache/
 tmp/
 temp/
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+src/data/db/*.db
+src/data/db/*.db-shm
+src/data/db/*.db-wal
