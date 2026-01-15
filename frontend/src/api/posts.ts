@@ -31,3 +31,9 @@ export async function createPost(userId: number, content: string): Promise<PostW
   }
   return response.json();
 }
+
+export async function getPostsByUserId(userId: number): Promise<PostWithAuthor[]> {
+  // Note: This endpoint doesn't exist yet, but we can filter client-side for now
+  const allPosts = await fetchPosts();
+  return allPosts.filter((post) => post.userId === userId);
+}
