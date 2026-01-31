@@ -1,5 +1,6 @@
 import React from "react";
 import UserList from "./components/UserList";
+import PostFeed from "./components/PostFeed";
 
 function App() {
   return (
@@ -10,7 +11,14 @@ function App() {
         </div>
       </header>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <UserList />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <PostFeed />
+          </div>
+          <div className="lg:col-span-1">
+            <UserList />
+          </div>
+        </div>
       </main>
     </div>
   );
