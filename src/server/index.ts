@@ -3,7 +3,8 @@ import { zValidator } from "@hono/zod-validator";
 import { getAllUsers } from "../data/queries/users.ts";
 import { getAllPosts, getPostById, createPost } from "../data/queries/posts.ts";
 import { getCommentsByPostId, createComment } from "../data/queries/comments.ts";
-import { createPostSchema, createCommentSchema } from "../schemas/index.ts";
+import { getLikesCount, toggleLike, hasUserLikedPost } from "../data/queries/likes.ts";
+import { createPostSchema, createCommentSchema, likePostSchema } from "../schemas/index.ts";
 
 const app = new Hono();
 
@@ -100,6 +101,45 @@ app.post("/posts/:postId/comments", zValidator("json", createCommentSchema), (c)
   } catch (error) {
     console.error("Error creating comment:", error);
     return c.json({ error: "Failed to create comment" }, 500);
+  }
+});
+
+// Likes endpoints
+app.get("/posts/:postId/likes", (c) => {
+  try {
+    const postId = parseInt(c.req.param("postId"));
+    if (isNaN(postId)) {
+      return c.json({ error: "Invalid post ID" }, 400);
+    }
+
+    const count = getLikesCount(postId);
+    return c.json({ postId, likesCount: count });
+  } catch (error) {
+    console.error("Error fetching likes:", error);
+    return c.json({ error: "Failed to fetch likes" }, 500);
+  }
+});
+
+app.post("/posts/:postId/likes", zValidator("json", likePostSchema), (c) => {
+  try {
+    const postId = parseInt(c.req.param("postId"));
+    if (isNaN(postId)) {
+      return c.json({ error: "Invalid post ID" }, 400);
+    }
+
+    const data = c.req.valid("json");
+    const result = toggleLike(postId, data.userId);
+    const count = getLikesCount(postId);
+    
+    return c.json({
+      postId,
+      userId: data.userId,
+      liked: result.liked,
+      likesCount: count,
+    });
+  } catch (error) {
+    console.error("Error toggling like:", error);
+    return c.json({ error: "Failed to toggle like" }, 500);
   }
 });
 
