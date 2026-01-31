@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { fetchPosts } from "../api/posts";
 import type { PostWithAuthor } from "../../../src/types/index.ts";
+import LikeButton from "./LikeButton";
+import CommentList from "./CommentList";
 
 function PostFeed() {
   const [posts, setPosts] = useState<PostWithAuthor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedComments, setExpandedComments] = useState<Set<number>>(new Set());
+  const [selectedUserId] = useState(1); // For demo purposes, using user ID 1
 
   useEffect(() => {
     async function loadPosts() {
@@ -23,6 +27,26 @@ function PostFeed() {
 
     loadPosts();
   }, []);
+
+  const handleLikeChange = (postId: number, liked: boolean, newCount: number) => {
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId ? { ...post, likesCount: newCount } : post
+      )
+    );
+  };
+
+  const toggleComments = (postId: number) => {
+    setExpandedComments((prev) => {
+      const next = new Set(prev);
+      if (next.has(postId)) {
+        next.delete(postId);
+      } else {
+        next.add(postId);
+      }
+      return next;
+    });
+  };
 
   if (loading) {
     return (
@@ -64,10 +88,34 @@ function PostFeed() {
                 </p>
               </div>
               <p className="mt-2 text-gray-900 whitespace-pre-wrap">{post.content}</p>
-              <div className="mt-4 flex items-center space-x-6 text-sm text-gray-500">
-                <span>{post.likesCount} likes</span>
-                <span>{post.commentsCount} comments</span>
+              <div className="mt-4 flex items-center space-x-4">
+                <LikeButton
+                  postId={post.id}
+                  userId={selectedUserId}
+                  initialLikesCount={post.likesCount}
+                  onLikeChange={(liked, newCount) => handleLikeChange(post.id, liked, newCount)}
+                />
+                <button
+                  onClick={() => toggleComments(post.id)}
+                  className="flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                  <span>{post.commentsCount}</span>
+                </button>
               </div>
+              {expandedComments.has(post.id) && <CommentList postId={post.id} />}
             </div>
           </div>
         </div>
