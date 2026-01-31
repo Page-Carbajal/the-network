@@ -4,7 +4,12 @@ import type { PostWithAuthor } from "../../../src/types/index.ts";
 import LikeButton from "./LikeButton";
 import CommentList from "./CommentList";
 
-function PostFeed() {
+interface PostFeedProps {
+  onPostCreated?: (post: PostWithAuthor) => void;
+  refreshTrigger?: number;
+}
+
+function PostFeed({ onPostCreated, refreshTrigger }: PostFeedProps) {
   const [posts, setPosts] = useState<PostWithAuthor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +31,7 @@ function PostFeed() {
     }
 
     loadPosts();
-  }, []);
+  }, [refreshTrigger]);
 
   const handleLikeChange = (postId: number, liked: boolean, newCount: number) => {
     setPosts((prevPosts) =>
@@ -34,6 +39,11 @@ function PostFeed() {
         post.id === postId ? { ...post, likesCount: newCount } : post
       )
     );
+  };
+
+  const handleNewPost = (post: PostWithAuthor) => {
+    setPosts((prevPosts) => [post, ...prevPosts]);
+    onPostCreated?.(post);
   };
 
   const toggleComments = (postId: number) => {
