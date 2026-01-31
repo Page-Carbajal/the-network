@@ -1,9 +1,10 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { getAllUsers } from "../data/queries/users.ts";
+import { getAllUsers, getUserById } from "../data/queries/users.ts";
 import { getAllPosts, getPostById, createPost } from "../data/queries/posts.ts";
 import { getCommentsByPostId, createComment } from "../data/queries/comments.ts";
 import { getLikesCount, toggleLike, hasUserLikedPost } from "../data/queries/likes.ts";
+import { getFollowers, getFollowing, followUser, unfollowUser, getFollowersCount, getFollowingCount } from "../data/queries/followers.ts";
 import { createPostSchema, createCommentSchema, likePostSchema } from "../schemas/index.ts";
 
 const app = new Hono();
@@ -140,6 +141,94 @@ app.post("/posts/:postId/likes", zValidator("json", likePostSchema), (c) => {
   } catch (error) {
     console.error("Error toggling like:", error);
     return c.json({ error: "Failed to toggle like" }, 500);
+  }
+});
+
+// Followers endpoints
+app.get("/users/:userId/followers", (c) => {
+  try {
+    const userId = parseInt(c.req.param("userId"));
+    if (isNaN(userId)) {
+      return c.json({ error: "Invalid user ID" }, 400);
+    }
+
+    const followers = getFollowers(userId);
+    const count = getFollowersCount(userId);
+    return c.json({ userId, followers, count });
+  } catch (error) {
+    console.error("Error fetching followers:", error);
+    return c.json({ error: "Failed to fetch followers" }, 500);
+  }
+});
+
+app.get("/users/:userId/following", (c) => {
+  try {
+    const userId = parseInt(c.req.param("userId"));
+    if (isNaN(userId)) {
+      return c.json({ error: "Invalid user ID" }, 400);
+    }
+
+    const following = getFollowing(userId);
+    const count = getFollowingCount(userId);
+    return c.json({ userId, following, count });
+  } catch (error) {
+    console.error("Error fetching following:", error);
+    return c.json({ error: "Failed to fetch following" }, 500);
+  }
+});
+
+app.post("/users/:userId/follow", (c) => {
+  try {
+    const followingId = parseInt(c.req.param("userId"));
+    if (isNaN(followingId)) {
+      return c.json({ error: "Invalid user ID" }, 400);
+    }
+
+    const body = await c.req.json();
+    const followerId = body.followerId;
+
+    if (!followerId || typeof followerId !== "number") {
+      return c.json({ error: "followerId is required" }, 400);
+    }
+
+    if (followerId === followingId) {
+      return c.json({ error: "User cannot follow themselves" }, 400);
+    }
+
+    const follower = followUser(followerId, followingId);
+    return c.json(follower, 201);
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("Already following")) {
+      return c.json({ error: error.message }, 409);
+    }
+    console.error("Error following user:", error);
+    return c.json({ error: "Failed to follow user" }, 500);
+  }
+});
+
+app.delete("/users/:userId/follow", (c) => {
+  try {
+    const followingId = parseInt(c.req.param("userId"));
+    if (isNaN(followingId)) {
+      return c.json({ error: "Invalid user ID" }, 400);
+    }
+
+    const body = await c.req.json();
+    const followerId = body.followerId;
+
+    if (!followerId || typeof followerId !== "number") {
+      return c.json({ error: "followerId is required" }, 400);
+    }
+
+    const success = unfollowUser(followerId, followingId);
+    if (!success) {
+      return c.json({ error: "Not following this user" }, 404);
+    }
+
+    return c.json({ message: "Unfollowed successfully" });
+  } catch (error) {
+    console.error("Error unfollowing user:", error);
+    return c.json({ error: "Failed to unfollow user" }, 500);
   }
 });
 
